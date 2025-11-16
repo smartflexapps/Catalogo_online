@@ -212,7 +212,6 @@
 
   <script>
     // URL de tu hoja de cálculo Google Sheets (debe estar compartida públicamente)
-    // Reemplaza esta URL con la tuya cuando esté lista
     const SPREADSHEET_URL = 'https://spreadsheets.google.com/feeds/list/1Lr7WAqefrjq_KwlmSWWRcaqKFH_BfDmKLqQtM2NEBwU/1346516126/public/values?alt=json';
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -227,51 +226,27 @@
       const loadingElement = document.getElementById('loading');
       const projectsGrid = document.getElementById('projectsGrid');
       
-      // Mostrar mensaje de carga
       loadingElement.textContent = 'Cargando proyectos desde Google Sheets...';
       projectsGrid.innerHTML = '';
       
       try {
-        // En una implementación real, aquí harías la llamada a la API
-        // const response = await fetch(SPREADSHEET_URL);
-        // const data = await response.json();
+        const response = await fetch(SPREADSHEET_URL);
+        const data = await response.json();
         
-        // Simulación de datos basados en la estructura de tu hoja
-        // En la implementación real, estos datos vendrían de tu hoja de cálculo
-        const mockProjects = [
-          {
-            id: 1,
-            nombre: 'Gestión de Clientes',
-            descripcion: 'Aplicación para gestionar información de clientes y contactos',
-            url: 'https://example.com/clientes',
-            imagen: 'https://placehold.co/600x400/3a86ff/ffffff?text=Gestión+Clientes',
-            categoria: 'CRM',
-            fecha: '2023-05-15',
-            estado: 'Activo'
-          },
-          {
-            id: 2,
-            nombre: 'Control de Inventarios',
-            descripcion: 'Sistema para controlar stock y movimientos de productos',
-            url: 'https://example.com/inventarios',
-            imagen: 'https://placehold.co/600x400/ff006e/ffffff?text=Control+Inventarios',
-            categoria: 'Negocios',
-            fecha: '2023-07-22',
-            estado: 'Activo'
-          },
-          {
-            id: 3,
-            nombre: 'App de Ventas',
-            descripcion: 'Herramienta para registro de ventas y pedidos',
-            url: 'https://example.com/ventas',
-            imagen: 'https://placehold.co/600x400/8338ec/ffffff?text=App+de+Ventas',
-            categoria: 'Ventas',
-            fecha: '2023-09-10',
-            estado: 'Activo'
-          }
-        ];
+        // Procesar los datos de tu hoja
+        const entries = data.feed.entry || [];
+        const projects = entries.map(entry => ({
+          id: entry.gsx$idprtp?.$t || '',
+          nombre: entry.gsx$prototipo?.$t || 'Sin nombre',
+          descripcion: entry.gsx$descripcion?.$t || 'Sin descripción',
+          url: entry.gsx$prototipo?.$t ? `https://www.appsheet.com/start/BROWSER/${entry.gsx$prototipo.$t}` : '#',
+          imagen: entry.gsx$portada?.$t || 'https://placehold.co/600x400/4a5568/ffffff?text=Sin+Imagen',
+          categoria: entry.gsx$basedatos?.$t || 'Sin categoría',
+          fecha: entry.gsx$fecha?.$t || '',
+          precio: entry.gsx$precio?.$t || 'Precio no disponible'
+        }));
 
-        displayProjects(mockProjects);
+        displayProjects(projects);
         loadingElement.style.display = 'none';
         
       } catch (error) {
@@ -289,7 +264,7 @@
         projectCard.className = 'project-card';
         
         projectCard.innerHTML = `
-          <div class="card-image" style="background-image: url('${project.imagen || 'https://placehold.co/600x400/4a5568/ffffff?text=Sin+Imagen'}')">
+          <div class="card-image" style="background-image: url('${project.imagen}')">
             <div class="app-icon">
               <i class="fas fa-mobile-alt"></i>
             </div>
@@ -298,15 +273,15 @@
             <h3 class="project-title">${project.nombre}</h3>
             <p class="project-desc">${project.descripcion}</p>
             <div class="project-tags">
-              <span class="tag">${project.categoria || 'Sin Categoría'}</span>
-              <span class="tag">${project.estado || 'Sin Estado'}</span>
+              <span class="tag">${project.categoria}</span>
+              <span class="tag">${project.precio}</span>
             </div>
             <a href="${project.url}" class="project-link" target="_blank">
               <i class="fas fa-external-link-alt"></i> Ver Aplicación
             </a>
             <div class="stats">
               <span><i class="far fa-calendar"></i> ${formatDate(project.fecha)}</span>
-              <span><i class="fas fa-sync-alt"></i> Actualizado</span>
+              <span><i class="fas fa-database"></i> ${project.categoria}</span>
             </div>
           </div>
         `;
