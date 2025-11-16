@@ -127,6 +127,8 @@
       color: rgba(255, 255, 255, 0.8);
       margin-bottom: 15px;
       line-height: 1.5;
+      max-height: 100px;
+      overflow: hidden;
     }
 
     .project-tags {
@@ -240,10 +242,11 @@
           nombre: entry.gsx$prototipo?.$t || 'Sin nombre',
           descripcion: entry.gsx$descripcion?.$t || 'Sin descripción',
           url: entry.gsx$prototipo?.$t ? `https://www.appsheet.com/start/BROWSER/${entry.gsx$prototipo.$t}` : '#',
-          imagen: entry.gsx$portada?.$t || 'https://placehold.co/600x400/4a5568/ffffff?text=Sin+Imagen',
+          imagen: entry.gsx$portada?.$t ? `https://drive.google.com/uc?export=view&id=${entry.gsx$portada.$t.split('/')[2]}` : 'https://placehold.co/600x400/4a5568/ffffff?text=Sin+Imagen',
           categoria: entry.gsx$basedatos?.$t || 'Sin categoría',
           fecha: entry.gsx$fecha?.$t || '',
-          precio: entry.gsx$precio?.$t || 'Precio no disponible'
+          precio: entry.gsx$precio?.$t ? `$${entry.gsx$precio.$t}` : 'Precio no disponible',
+          modulos: entry.gsx$modulos?.$t || 'Sin módulos'
         }));
 
         displayProjects(projects);
@@ -273,15 +276,15 @@
             <h3 class="project-title">${project.nombre}</h3>
             <p class="project-desc">${project.descripcion}</p>
             <div class="project-tags">
-              <span class="tag">${project.categoria}</span>
               <span class="tag">${project.precio}</span>
+              <span class="tag">${project.modulos.split(',').length} módulos</span>
             </div>
             <a href="${project.url}" class="project-link" target="_blank">
               <i class="fas fa-external-link-alt"></i> Ver Aplicación
             </a>
             <div class="stats">
               <span><i class="far fa-calendar"></i> ${formatDate(project.fecha)}</span>
-              <span><i class="fas fa-database"></i> ${project.categoria}</span>
+              <span><i class="fas fa-database"></i> ${project.categoria.split(',').length} BDs</span>
             </div>
           </div>
         `;
