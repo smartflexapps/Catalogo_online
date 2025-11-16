@@ -237,17 +237,47 @@
         
         // Procesar los datos de tu hoja
         const entries = data.feed.entry || [];
-        const projects = entries.map(entry => ({
-          id: entry.gsx$idprtp?.$t || '',
-          nombre: entry.gsx$prototipo?.$t || 'Sin nombre',
-          descripcion: entry.gsx$descripcion?.$t || 'Sin descripción',
-          url: entry.gsx$prototipo?.$t ? `https://www.appsheet.com/start/BROWSER/${entry.gsx$prototipo.$t}` : '#',
-          imagen: entry.gsx$portada?.$t ? `https://drive.google.com/uc?export=view&id=${entry.gsx$portada.$t.split('/')[2]}` : 'https://placehold.co/600x400/4a5568/ffffff?text=Sin+Imagen',
-          categoria: entry.gsx$basedatos?.$t || 'Sin categoría',
-          fecha: entry.gsx$fecha?.$t || '',
-          precio: entry.gsx$precio?.$t ? `$${entry.gsx$precio.$t}` : 'Precio no disponible',
-          modulos: entry.gsx$modulos?.$t || 'Sin módulos'
-        }));
+        const projects = entries.map(entry => {
+          // Extraer valores de las columnas correctas
+          const id_prtp = entry['gsx$idprtp']?.$t || '';
+          const fecha = entry['gsx$fecha']?.$t || '';
+          const prototipo = entry['gsx$prototipo']?.$t || 'Sin nombre';
+          const descripcion = entry['gsx$descripcion']?.$t || 'Sin descripción';
+          const bases_datos = entry['gsx$basedatos']?.$t || 'Sin categoría';
+          const modulos = entry['gsx$modulos']?.$t || 'Sin módulos';
+          const precio = entry['gsx$precio']?.$t || 'Precio no disponible';
+          const portada = entry['gsx$portada']?.$t || '';
+          
+          // Construir URL de la imagen
+          let imagenUrl = 'https://placehold.co/600x400/4a5568/ffffff?text=Sin+Imagen';
+          if (portada) {
+            // Si la portada es una URL directa
+            if (portada.startsWith('http')) {
+              imagenUrl = portada;
+            } else {
+              // Si es una ruta relativa, asumimos que está en Google Drive
+              // Extraer ID del archivo de Google Drive si es necesario
+              const match = portada.match(/\/file\/d\/([^\/]+)\//);
+              if (match) {
+                imagenUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+              } else {
+                imagenUrl = portada; // Usar tal cual si no es de Google Drive
+              }
+            }
+          }
+          
+          return {
+            id: id_prtp,
+            nombre: prototipo,
+            descripcion: descripcion,
+            url: prototipo ? `https://www.appsheet.com/start/BROWSER/${prototipo}` : '#',
+            imagen: imagenUrl,
+            categoria: bases_datos,
+            fecha: fecha,
+            precio: precio !== 'Precio no disponible' ? `$${precio}` : 'Precio no disponible',
+            modulos: modulos
+          };
+        });
 
         displayProjects(projects);
         loadingElement.style.display = 'none';
@@ -277,14 +307,14 @@
             <p class="project-desc">${project.descripcion}</p>
             <div class="project-tags">
               <span class="tag">${project.precio}</span>
-              <span class="tag">${project.modulos.split(',').length} módulos</span>
+              <span class="tag">${project.categoria.split(',').length} BDs</span>
             </div>
             <a href="${project.url}" class="project-link" target="_blank">
               <i class="fas fa-external-link-alt"></i> Ver Aplicación
             </a>
             <div class="stats">
               <span><i class="far fa-calendar"></i> ${formatDate(project.fecha)}</span>
-              <span><i class="fas fa-database"></i> ${project.categoria.split(',').length} BDs</span>
+              <span><i class="fas fa-cogs"></i> ${project.modulos.split(',').length} mods</span>
             </div>
           </div>
         `;
@@ -295,8 +325,15 @@
 
     function formatDate(dateString) {
       if (!dateString) return 'Fecha desconocida';
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(dateString).toLocaleDateString('es-ES', options);
+      // Formato de fecha: convertir de DD/MM/YYYY a objeto Date
+      try {
+        const [day, month, year] = dateString.split('/');
+        const date = new Date(`${year}-${month}-${day}`);
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return date.toLocaleDateString('es-ES', options);
+      } catch (e) {
+        return dateString;
+      }
     }
   </script>
 </body>
